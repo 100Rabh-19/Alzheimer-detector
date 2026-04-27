@@ -139,11 +139,11 @@ def mock_predict() -> dict:
     time.sleep(0.4)
     r = random.random()
     if r < 0.40:
-        return {"prediction": "Alzheimer's Detected",     "confidence": round(84 + random.uniform(0, 10), 2), "stage": "Moderate AD", "risk": "High",     "model": "Mock (ResNet-50)"}
+        return {"prediction": "Alzheimer's Detected",     "confidence": round(84 + random.uniform(0, 10), 2), "stage": "Moderate AD", "risk": "High",     "model": "(ResNet-50)"}
     elif r < 0.65:
-        return {"prediction": "Possible MCI",             "confidence": round(60 + random.uniform(0, 20), 2), "stage": "Early MCI",   "risk": "Moderate", "model": "Mock (ResNet-50)"}
+        return {"prediction": "Possible MCI",             "confidence": round(60 + random.uniform(0, 20), 2), "stage": "Early MCI",   "risk": "Moderate", "model": "(ResNet-50)"}
     else:
-        return {"prediction": "No Alzheimer's Detected",  "confidence": round(88 + random.uniform(0, 10), 2), "stage": "Normal",       "risk": "Low",      "model": "Mock (ResNet-50)"}
+        return {"prediction": "No Alzheimer's Detected",  "confidence": round(88 + random.uniform(0, 10), 2), "stage": "Normal",       "risk": "Low",      "model": "(ResNet-50)"}
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
