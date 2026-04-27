@@ -1453,34 +1453,34 @@
            This simulates what your /predict endpoint should return.
            Remove this function once your model is connected.
         ───────────────────────────────────────────────────── */
-        function getMockPrediction() {
-            const r = Math.random();
-            if (r < 0.45) {
-                return {
-                    prediction: 'Alzheimer\'s Detected',
-                    confidence: 84 + Math.random() * 10,
-                    stage: 'Mild-Moderate',
-                    risk: 'High',
-                    model: 'ResNet-50'
-                };
-            } else if (r < 0.7) {
-                return {
-                    prediction: 'Possible MCI',
-                    confidence: 60 + Math.random() * 20,
-                    stage: 'Early / MCI',
-                    risk: 'Moderate',
-                    model: 'ResNet-50'
-                };
-            } else {
-                return {
-                    prediction: 'No Alzheimer\'s Detected',
-                    confidence: 88 + Math.random() * 10,
-                    stage: 'Normal',
-                    risk: 'Low',
-                    model: 'ResNet-50'
-                };
-            }
-        }
+        // function getMockPrediction() {
+        //     const r = Math.random();
+        //     if (r < 0.45) {
+        //         return {
+        //             prediction: 'Alzheimer\'s Detected',
+        //             confidence: 84 + Math.random() * 10,
+        //             stage: 'Mild-Moderate',
+        //             risk: 'High',
+        //             model: 'ResNet-50'
+        //         };
+        //     } else if (r < 0.7) {
+        //         return {
+        //             prediction: 'Possible MCI',
+        //             confidence: 60 + Math.random() * 20,
+        //             stage: 'Early / MCI',
+        //             risk: 'Moderate',
+        //             model: 'ResNet-50'
+        //         };
+        //     } else {
+        //         return {
+        //             prediction: 'No Alzheimer\'s Detected',
+        //             confidence: 88 + Math.random() * 10,
+        //             stage: 'Normal',
+        //             risk: 'Low',
+        //             model: 'ResNet-50'
+        //         };
+        //     }
+        // }
 
         // ── DISPLAY RESULT ──────────────────────────────────
         function displayResult(data, elapsed) {
