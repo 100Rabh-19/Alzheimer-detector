@@ -1,0 +1,25 @@
+flask==3.0.3
+flask-cors==4.0.1
+werkzeug==3.0.3
+gunicorn==22.0.0
+fpdf2==2.7.9           # PDF report generation (/report endpoint)
+
+# ── PyTorch (MRI CNN model) — uncomment for your environment ────────────────
+# pip install torch torchvision pillow
+# torch==2.3.1
+# torchvision==0.18.1
+# Pillow==10.3.0
+
+# ── DICOM support ────────────────────────────────────────────────────────────
+# pydicom==2.4.4
+# numpy==1.26.4
+
+# ── scikit-learn / XGBoost (if using classical ML for clinical data) ─────────
+# scikit-learn==1.4.2
+# xgboost==2.0.3
+# joblib==1.4.2
+# pandas==2.2.2
+
+# ── NIfTI support ────────────────────────────────────────────────────────────
+# nibabel==5.2.1
+# SimpleITK==2.3.1

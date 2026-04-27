@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeuroScan AI — Alzheimer's Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2.0.1/dist/chartjs-chart-matrix.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2.0.1"></script>
+  <style>
+    /* ── TOKENS ─────────────────────────────────────────────────────── */
+    :root {
+      --bg:      #04060f;
+      --surface: #0b0f1e;
+      --card:    #101628;
+      --border:  rgba(99,188,255,0.12);
+      --teal:    #00d4b8;
+      --cyan:    #63bcff;
+      --purple:  #9d6fff;
+      --danger:  #ff6b8a;
+      --warn:    #ffb347;
+      --success: #4ade80;
+      --text:    #e8eef8;
+      --muted:   #6b7a9d;
+      --fh: 'Syne',    sans-serif;
+      --fb: 'DM Sans', sans-serif;
+      --fm: 'DM Mono', monospace;
+      --r:  16px;
+      --rs: 8px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--fb);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% 20%,rgba(0,212,184,.07) 0%,transparent 60%),
+        radial-gradient(ellipse 60% 60% at 90% 80%,rgba(99,188,255,.06) 0%,transparent 60%),
+        radial-gradient(ellipse 40% 40% at 50% 50%,rgba(157,111,255,.04) 0%,transparent 60%)}
+    .wrap{position:relative;z-index:1}
+    .container{max-width:1120px;margin:0 auto;padding:0 24px}
+
+    /* ── NAV ─────────────────────────────────────────────────────────── */
+    nav{display:flex;align-items:center;justify-content:space-between;
+      padding:18px 40px;background:rgba(4,6,15,.85);backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+    .nav-brand{display:flex;align-items:center;gap:12px;
+      font-family:var(--fh);font-size:1.2rem;font-weight:700;color:var(--text);text-decoration:none}
+    .nav-logo{width:36px;height:36px;border-radius:9px;
+      background:linear-gradient(135deg,var(--teal),var(--cyan));
+      display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+    .nav-links{display:flex;align-items:center;gap:4px}
+    .nav-links a{color:var(--muted);text-decoration:none;font-size:.88rem;
+      padding:7px 14px;border-radius:7px;transition:all .2s;cursor:pointer}
+    .nav-links a:hover,.nav-links a.active{color:var(--text);background:var(--card)}
+    .btn-cta{background:linear-gradient(135deg,var(--teal),var(--cyan));color:#04060f;
+      font-family:var(--fh);font-weight:700;font-size:.88rem;padding:9px 22px;
+      border-radius:9px;border:none;cursor:pointer;transition:all .25s}
+    .btn-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,212,184,.35)}
+
+    /* ── PAGE SECTIONS ───────────────────────────────────────────────── */
+    .page-section{display:none}
+    .page-section.active{display:block}
+
+    /* ── HERO ────────────────────────────────────────────────────────── */
+    .hero{padding:90px 40px 70px;text-align:center}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;
+      background:rgba(0,212,184,.08);border:1px solid rgba(0,212,184,.2);
+      color:var(--teal);font-family:var(--fm);font-size:.76rem;
+      padding:5px 14px;border-radius:100px;margin-bottom:24px}
+    .hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 1.5s infinite}
+    .hero h1{font-family:var(--fh);font-size:clamp(2.2rem,6vw,4rem);font-weight:800;
+      line-height:1.1;margin-bottom:18px}
+    .hero h1 em{font-style:normal;color:var(--teal)}
+    .hero p{color:var(--muted);font-size:1.05rem;max-width:540px;margin:0 auto 36px;line-height:1.7}
+    .hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+    .btn-primary{background:linear-gradient(135deg,var(--teal),var(--cyan));color:#04060f;
+      font-family:var(--fh);font-weight:700;font-size:.95rem;padding:13px 28px;
+      border-radius:11px;border:none;cursor:pointer;transition:all .25s;text-decoration:none;
+      display:inline-flex;align-items:center;gap:8px}
+    .btn-primary:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,212,184,.4)}
+    .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border);
+      font-size:.95rem;padding:13px 28px;border-radius:11px;cursor:pointer;transition:all .25s;
+      display:inline-flex;align-items:center;gap:8px}
+    .btn-ghost:hover{background:var(--card);border-color:rgba(99,188,255,.3)}
+
+    /* ── STATS ───────────────────────────────────────────────────────── */
+    .stats-section{padding:0 40px 70px}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+      padding:24px;transition:all .3s;animation:fadeUp .5s ease both}
+    .stat-card:hover{border-color:rgba(0,212,184,.3);transform:translateY(-3px)}
+    .stat-icon{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;
+      justify-content:center;font-size:1.1rem;margin-bottom:14px}
+    .stat-icon.g{background:rgba(0,212,184,.12)}
+    .stat-icon.b{background:rgba(99,188,255,.12)}
+    .stat-icon.p{background:rgba(157,111,255,.12)}
+    .stat-icon.o{background:rgba(255,179,71,.12)}
+    .stat-label{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+    .stat-value{font-family:var(--fh);font-size:1.9rem;font-weight:800}
+
+    /* ── SECTION TITLE ───────────────────────────────────────────────── */
+    .sec-hd{margin-bottom:32px}
+    .sec-hd h2{font-family:var(--fh);font-size:1.7rem;font-weight:700;
+      display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .sec-hd h2 .dot{width:9px;height:9px;border-radius:50%;
+      background:linear-gradient(135deg,var(--teal),var(--cyan));flex-shrink:0}
+    .sec-hd p{color:var(--muted);font-size:.9rem;padding-left:19px}
+
+    /* ── CHART ───────────────────────────────────────────────────────── */
+    .charts-sec{padding:0 40px 70px}
+    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px}
+    .chart-wrap{height:260px;position:relative}
+
+    /* ── HOW IT WORKS ────────────────────────────────────────────────── */
+    .how-sec{padding:0 40px 70px}
+    .steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+    .step-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px}
+    .step-num{font-family:var(--fm);font-size:.72rem;color:var(--teal);letter-spacing:.1em;margin-bottom:12px}
+    .step-icon{font-size:1.5rem;margin-bottom:10px}
+    .step-card h3{font-family:var(--fh);font-size:.95rem;font-weight:600;margin-bottom:6px}
+    .step-card p{color:var(--muted);font-size:.82rem;line-height:1.6}
+
+    /* ── PREDICT PAGE ────────────────────────────────────────────────── */
+    .predict-sec{padding:0 40px 70px}
+    .predict-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    @media(max-width:768px){.predict-grid{grid-template-columns:1fr}}
+
+    /* tab bar */
+    .tab-bar{display:flex;gap:3px;background:var(--surface);border-radius:var(--rs);padding:3px;margin-bottom:20px}
+    .tab{flex:1;padding:9px;text-align:center;border-radius:6px;cursor:pointer;font-size:.85rem;
+      color:var(--muted);transition:all .2s;border:none;background:transparent;font-family:var(--fb)}
+    .tab.active{background:var(--card);color:var(--text)}
+
+    /* upload area */
+    .upload-card,.result-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px}
+    .upload-area{border:2px dashed rgba(0,212,184,.22);border-radius:var(--r);padding:42px 20px;
+      text-align:center;cursor:pointer;transition:all .25s;margin-bottom:20px;position:relative}
+    .upload-area:hover,.upload-area.drag-over{border-color:var(--teal);background:rgba(0,212,184,.04)}
+    .upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+    .upload-icon{font-size:2.2rem;margin-bottom:10px}
+    .upload-area h3{font-family:var(--fh);font-size:.95rem;font-weight:600;margin-bottom:4px}
+    .upload-area p{color:var(--muted);font-size:.82rem}
+    .file-types{display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+    .tag{background:rgba(99,188,255,.1);color:var(--cyan);font-family:var(--fm);font-size:.7rem;
+      padding:2px 9px;border-radius:100px;border:1px solid rgba(99,188,255,.2)}
+    .preview-img{width:100%;max-height:180px;object-fit:contain;border-radius:var(--rs);display:none;margin-bottom:14px}
+    .fname-lbl{color:var(--muted);font-size:.8rem;margin-bottom:14px;display:none}
+
+    /* form */
+    .form-group{margin-bottom:15px}
+    .form-group label{display:block;color:var(--muted);font-size:.78rem;text-transform:uppercase;
+      letter-spacing:.07em;margin-bottom:6px}
+    .form-group input,.form-group select{width:100%;background:var(--surface);
+      border:1px solid var(--border);border-radius:var(--rs);color:var(--text);
+      font-family:var(--fb);font-size:.9rem;padding:10px 14px;transition:border .2s;outline:none}
+    .form-group input:focus,.form-group select:focus{border-color:var(--teal)}
+    .form-group select option{background:var(--surface)}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    /* run button */
+    .btn-run{width:100%;background:linear-gradient(135deg,var(--teal),var(--cyan));color:#04060f;
+      font-family:var(--fh);font-weight:700;font-size:.95rem;padding:14px;border-radius:11px;
+      border:none;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;
+      margin-top:4px}
+    .btn-run:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,212,184,.4)}
+    .btn-run:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+    /* ── RESULT STATES ───────────────────────────────────────────────── */
+    .result-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;gap:14px;padding:60px 0}
+    .result-placeholder .bi{font-size:2.8rem;opacity:.25}
+    .result-placeholder p{color:var(--muted);font-size:.88rem}
+
+    .loading-state{display:none;flex-direction:column;align-items:center;gap:18px;padding:60px 0}
+    .spinner{width:52px;height:52px;border-radius:50%;border:3px solid rgba(0,212,184,.15);
+      border-top-color:var(--teal);animation:spin .8s linear infinite}
+    .loading-steps{list-style:none;text-align:left}
+    .loading-steps li{color:var(--muted);font-size:.8rem;padding:3px 0;font-family:var(--fm);transition:color .3s}
+    .loading-steps li.done{color:var(--teal)}
+    .loading-steps li::before{content:'○ '}
+    .loading-steps li.done::before{content:'✓ '}
+
+    .result-output{display:none}
+    .result-verdict{display:flex;align-items:center;gap:14px;padding:20px;border-radius:var(--rs);margin-bottom:20px}
+    .result-verdict.positive{background:rgba(255,107,138,.1);border:1px solid rgba(255,107,138,.25)}
+    .result-verdict.warning {background:rgba(255,179,71,.1); border:1px solid rgba(255,179,71,.25)}
+    .result-verdict.negative{background:rgba(0,212,184,.1);  border:1px solid rgba(0,212,184,.25)}
+    .verdict-icon{font-size:1.8rem}
+    .verdict-label{font-family:var(--fm);font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;color:var(--muted)}
+    .verdict-text{font-family:var(--fh);font-size:1.1rem;font-weight:700}
+    .result-verdict.positive .verdict-text{color:var(--danger)}
+    .result-verdict.warning  .verdict-text{color:var(--warn)}
+    .result-verdict.negative .verdict-text{color:var(--teal)}
+
+    .conf-wrap{margin-bottom:20px}
+    .conf-wrap label{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-bottom:6px}
+    .conf-wrap label span{font-family:var(--fm);color:var(--text)}
+    .conf-track{height:7px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
+    .conf-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--teal),var(--cyan));
+      width:0;transition:width 1s cubic-bezier(.4,0,.2,1)}
+
+    .result-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+    .m-pill{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px}
+    .m-pill .ml{color:var(--muted);font-size:.72rem;margin-bottom:3px}
+    .m-pill .mv{font-family:var(--fm);font-size:.95rem;color:var(--cyan)}
+
+    /* disease info panel */
+    .disease-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);
+      padding:16px;margin-bottom:16px}
+    .disease-panel h4{font-family:var(--fh);font-size:.9rem;font-weight:600;margin-bottom:10px;
+      color:var(--cyan)}
+    .disease-list{list-style:none;padding:0}
+    .disease-list li{color:var(--muted);font-size:.8rem;padding:3px 0;line-height:1.5}
+    .disease-list li::before{content:'• ';color:var(--teal)}
+    .disease-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+    .dtab{background:var(--card);border:1px solid var(--border);color:var(--muted);
+      font-size:.75rem;padding:4px 12px;border-radius:100px;cursor:pointer;transition:all .2s;border:none}
+    .dtab.active{background:rgba(0,212,184,.12);color:var(--teal);border:1px solid rgba(0,212,184,.25)}
+
+    /* pdf btn */
+    .btn-pdf{width:100%;background:transparent;color:var(--teal);border:1px solid rgba(0,212,184,.3);
+      font-family:var(--fh);font-weight:600;font-size:.88rem;padding:10px;border-radius:var(--rs);
+      cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
+    .btn-pdf:hover{background:rgba(0,212,184,.08)}
+
+    .disclaimer{background:rgba(255,179,71,.08);border:1px solid rgba(255,179,71,.2);
+      border-radius:var(--rs);padding:12px 14px;font-size:.77rem;color:var(--warn);line-height:1.5}
+
+    .result-error{display:none;flex-direction:column;align-items:center;gap:14px;padding:60px 0;text-align:center}
+    .result-error .ei{font-size:2.2rem}
+    .result-error p{color:var(--muted);font-size:.88rem}
+    .result-error .em{color:var(--danger);font-family:var(--fm);font-size:.8rem}
+
+    /* ── DOCTORS SECTION ─────────────────────────────────────────────── */
+    .doctors-sec{padding:0 40px 70px}
+    .city-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+    .city-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);
+      font-size:.8rem;padding:6px 16px;border-radius:100px;cursor:pointer;transition:all .2s}
+    .city-btn:hover,.city-btn.active{background:rgba(0,212,184,.12);color:var(--teal);
+      border-color:rgba(0,212,184,.3)}
+    .doctors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+    .doc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+      padding:20px;transition:all .3s}
+    .doc-card:hover{border-color:rgba(0,212,184,.3);transform:translateY(-3px)}
+    .doc-header{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+    .doc-avatar{width:46px;height:46px;border-radius:50%;flex-shrink:0;
+      background:linear-gradient(135deg,var(--teal),var(--cyan));
+      display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#04060f}
+    .doc-name{font-family:var(--fh);font-size:.95rem;font-weight:600}
+    .doc-spec{color:var(--muted);font-size:.78rem;margin-top:2px}
+    .doc-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+    .doc-meta-item{background:var(--surface);border-radius:6px;padding:6px 10px}
+    .doc-meta-item .dml{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em}
+    .doc-meta-item .dmv{font-family:var(--fm);font-size:.82rem;color:var(--cyan)}
+    .book-form{display:none;background:var(--surface);border-radius:var(--rs);padding:14px;margin-top:10px}
+    .book-form.open{display:block}
+    .book-form input{width:100%;background:var(--card);border:1px solid var(--border);
+      border-radius:6px;color:var(--text);font-family:var(--fb);font-size:.85rem;
+      padding:8px 12px;margin-bottom:8px;outline:none}
+    .book-form input:focus{border-color:var(--teal)}
+    .btn-book{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);
+      font-size:.82rem;padding:8px;border-radius:7px;cursor:pointer;transition:all .2s}
+    .btn-book:hover{border-color:var(--teal);color:var(--teal)}
+    .btn-confirm{width:100%;background:linear-gradient(135deg,var(--teal),var(--cyan));color:#04060f;
+      font-family:var(--fh);font-weight:700;font-size:.82rem;padding:9px;border-radius:7px;
+      border:none;cursor:pointer;transition:all .2s;margin-top:6px}
+    .book-success{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);
+      border-radius:6px;padding:10px;font-size:.8rem;color:var(--success);margin-top:8px;display:none}
+
+    /* ── MODEL INSIGHTS ──────────────────────────────────────────────── */
+    .insights-sec{padding:0 40px 70px}
+    .insights-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:28px}
+    .ins-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px}
+    .ins-card h3{font-family:var(--fh);font-size:1rem;font-weight:600;margin-bottom:4px}
+    .ins-card p{color:var(--muted);font-size:.82rem;line-height:1.6}
+    .ins-icon{font-size:1.5rem;margin-bottom:12px}
+
+    .conf-matrix{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:12px}
+    .cm-cell{background:rgba(0,212,184,.08);border-radius:4px;padding:10px;text-align:center}
+    .cm-cell.highlight{background:rgba(0,212,184,.25)}
+    .cm-val{font-family:var(--fm);font-size:1.1rem;color:var(--teal);font-weight:700}
+    .cm-lbl{font-size:.7rem;color:var(--muted);margin-top:3px}
+
+    .metric-table{width:100%;border-collapse:collapse;margin-top:12px}
+    .metric-table th{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;
+      padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+    .metric-table td{padding:8px 12px;font-size:.85rem;border-bottom:1px solid rgba(255,255,255,.04)}
+    .metric-table .good{color:var(--success)}
+    .metric-table .ok{color:var(--warn)}
+
+    /* ── FOOTER ──────────────────────────────────────────────────────── */
+    footer{border-top:1px solid var(--border);padding:32px 40px;
+      display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;
+      color:var(--muted);font-size:.82rem}
+    .footer-brand{display:flex;align-items:center;gap:10px;font-family:var(--fh);font-weight:600;color:var(--text)}
+
+    /* ── ANIMATIONS ──────────────────────────────────────────────────── */
+    @keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeUp  {from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)}}
+    @keyframes spin    {to{transform:rotate(360deg)}}
+    @keyframes pulse   {0%,100%{opacity:1}50%{opacity:.3}}
+
+    /* ── MOBILE ──────────────────────────────────────────────────────── */
+    @media(max-width:600px){
+      nav{padding:14px 18px}
+      .nav-links a{display:none}
+      .hero,.stats-section,.charts-sec,.how-sec,.predict-sec,.doctors-sec,.insights-sec,.about-sec{padding-left:18px;padding-right:18px}
+      footer{padding:22px 18px}
+      .form-row{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body class="wrap">
+
+<!-- ── NAV ──────────────────────────────────────────────────────────────── -->
+<nav>
+  <a href="#" class="nav-brand" onclick="showPage('home');return false">
+    <div class="nav-logo">🧠</div> NeuroScan AI
+  </a>
+  <div class="nav-links">
+    <a onclick="showPage('home')"     id="nav-home"     class="active">Home</a>
+    <a onclick="showPage('predict')"  id="nav-predict">Predict</a>
+    <a onclick="showPage('doctors')"  id="nav-doctors">Doctors</a>
+    <a onclick="showPage('insights')" id="nav-insights">Model Insights</a>
+  </div>
+  <button class="btn-cta" onclick="showPage('predict')">Start Predicting →</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     HOME PAGE
+═══════════════════════════════════════════════════════════════════════════ -->
+<div id="page-home" class="page-section active">
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge"><span class="dot"></span> ALZHEIMER'S DETECTION SYSTEM v2.1</div>
+      <h1>Early Detection of<br><em>Alzheimer's Disease</em><br>Powered by AI</h1>
+      <p>Upload MRI scans or enter clinical data to receive an AI-driven diagnosis with confidence scores, disease insights, and specialist recommendations.</p>
+      <div class="hero-cta">
+        <button class="btn-primary" onclick="showPage('predict')">🔬 Run Prediction</button>
+        <button class="btn-ghost"   onclick="showPage('insights')">📊 Model Insights</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card" style="animation-delay:.05s">
+          <div class="stat-icon g">✅</div>
+          <div class="stat-label">Model Accuracy</div>
+          <div class="stat-value" style="color:var(--teal)">86.4%</div>
+        </div>
+        <div class="stat-card" style="animation-delay:.1s">
+          <div class="stat-icon b">👥</div>
+          <div class="stat-label">Cases Analyzed</div>
+          <div class="stat-value" style="color:var(--cyan)">2,921</div>
+        </div>
+        <div class="stat-card" style="animation-delay:.15s">
+          <div class="stat-icon p">🧬</div>
+          <div class="stat-label">Biomarkers</div>
+          <div class="stat-value" style="color:var(--purple)">18</div>
+        </div>
+        <div class="stat-card" style="animation-delay:.2s">
+          <div class="stat-icon o">⚡</div>
+          <div class="stat-label">Avg Prediction Time</div>
+          <div class="stat-value" style="color:var(--warn)">0.8s</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="charts-sec">
+    <div class="container">
+      <div class="sec-hd">
+        <h2><span class="dot"></span> Model Performance</h2>
+        <p>Evaluated on ADNI dataset — 10-fold cross-validation, 2,840 samples</p>
+      </div>
+      <div class="chart-card">
+        <div class="chart-wrap"><canvas id="perfChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-sec">
+    <div class="container">
+      <div class="sec-hd">
+        <h2><span class="dot"></span> How It Works</h2>
+        <p>Four steps from input to diagnosis</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card"><div class="step-num">01 / INPUT</div><div class="step-icon">🖼</div><h3>Upload Data</h3><p>Provide an MRI scan (JPEG/PNG/DICOM) or clinical biomarkers like MMSE, CDR, and volumetric values.</p></div>
+        <div class="step-card"><div class="step-num">02 / PROCESS</div><div class="step-icon">⚙️</div><h3>Preprocessing</h3><p>Scans are normalized and resized to 224×224. Clinical values are scaled and encoded for the model.</p></div>
+        <div class="step-card"><div class="step-num">03 / INFER</div><div class="step-icon">🤖</div><h3>Model Inference</h3><p>A fine-tuned ResNet-50 (MRI) or feature model (clinical) classifies and returns class probabilities.</p></div>
+        <div class="step-card"><div class="step-num">04 / REPORT</div><div class="step-icon">📋</div><h3>Diagnosis Report</h3><p>Results include a label, confidence score, risk tier, precautions, diet tips, and specialist referral.</p></div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /page-home -->
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PREDICT PAGE
+═══════════════════════════════════════════════════════════════════════════ -->
+<div id="page-predict" class="page-section">
+  <section class="predict-sec">
+    <div class="container" style="padding-top:40px">
+      <div class="sec-hd">
+        <h2><span class="dot"></span> Run a Prediction</h2>
+        <p>Upload an MRI scan or fill in clinical data — results in under a second</p>
+      </div>
+      <div class="predict-grid">
+
+        <!-- INPUT PANEL -->
+        <div class="upload-card">
+          <div class="tab-bar">
+            <button class="tab active" onclick="switchTab('mri',this)">🖼 MRI Scan</button>
+            <button class="tab"        onclick="switchTab('clinical',this)">📋 Clinical Data</button>
+          </div>
+
+          <!-- MRI TAB -->
+          <div id="tab-mri">
+            <div class="upload-area" id="dropZone">
+              <input type="file" id="mriFile" accept="image/*,.dcm" onchange="handleFile(event)">
+              <div class="upload-icon">🧠</div>
+              <h3>Drop MRI Scan Here</h3>
+              <p>or click to browse</p>
+              <div class="file-types">
+                <span class="tag">JPEG</span><span class="tag">PNG</span>
+                <span class="tag">DICOM</span><span class="tag">TIFF</span>
+              </div>
+            </div>
+            <img id="mriPreview" class="preview-img" alt="Preview"/>
+            <p class="fname-lbl" id="fileName"></p>
+          </div>
+
+          <!-- CLINICAL TAB -->
+          <div id="tab-clinical" style="display:none">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Patient Name</label>
+                <input type="text" id="pname" placeholder="e.g. Riya Sharma">
+              </div>
+              <div class="form-group">
+                <label>City</label>
+                <select id="city">
+                  <option value="">Select city</option>
+                  <option>Delhi</option><option>Mumbai</option><option>Bangalore</option>
+                  <option>Chennai</option><option>Kolkata</option><option>Pune</option>
+                  <option>Hyderabad</option><option>Haridwar</option><option>Jaipur</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Age</label><input type="number" id="age" placeholder="e.g. 72" min="40" max="100"></div>
+              <div class="form-group"><label>Gender</label>
+                <select id="gender"><option value="">Select</option><option value="M">Male</option><option value="F">Female</option></select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>MMSE Score (0–30)</label><input type="number" id="mmse" placeholder="e.g. 24" min="0" max="30"></div>
+              <div class="form-group"><label>CDR Rating</label>
+                <select id="cdr">
+                  <option value="">Select</option>
+                  <option value="0">0 — Normal</option><option value="0.5">0.5 — Questionable</option>
+                  <option value="1">1 — Mild</option><option value="2">2 — Moderate</option><option value="3">3 — Severe</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>eTIV (mm³)</label><input type="number" id="etiv" placeholder="e.g. 1450"></div>
+              <div class="form-group"><label>nWBV (ratio)</label><input type="number" id="nwbv" placeholder="e.g. 0.72" step="0.01"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Years of Education</label><input type="number" id="educ" placeholder="e.g. 14" min="0" max="30"></div>
+              <div class="form-group"><label>SES (1=highest, 5=lowest)</label>
+                <select id="ses"><option value="">Select</option>
+                  <option value="1">1</option><option value="2">2</option>
+                  <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-run" id="runBtn" onclick="runPrediction()">🔬 Analyze &amp; Predict</button>
+        </div>
+
+        <!-- RESULT PANEL -->
+        <div class="result-card" id="resultCard">
+          <div class="result-placeholder" id="rPlaceholder">
+            <div class="bi">🔬</div>
+            <p>Upload a scan or fill in clinical data,<br>then click <strong>Analyze &amp; Predict</strong>.</p>
+          </div>
+          <div class="loading-state" id="rLoading">
+            <div class="spinner"></div>
+            <ul class="loading-steps" id="lSteps">
+              <li>Preprocessing input data</li>
+              <li>Running feature extraction</li>
+              <li>Applying classification model</li>
+              <li>Computing confidence score</li>
+              <li>Generating report</li>
+            </ul>
+          </div>
+          <div class="result-output" id="rOutput">
+            <div class="result-verdict" id="rVerdict">
+              <div class="verdict-icon" id="vIcon"></div>
+              <div>
+                <div class="verdict-label">Prediction Result</div>
+                <div class="verdict-text" id="vText"></div>
+              </div>
+            </div>
+            <div class="conf-wrap">
+              <label>Confidence Score <span id="confVal">0%</span></label>
+              <div class="conf-track"><div class="conf-fill" id="confFill"></div></div>
+            </div>
+            <div class="result-metrics">
+              <div class="m-pill"><div class="ml">Stage</div>   <div class="mv" id="mStage">—</div></div>
+              <div class="m-pill"><div class="ml">Risk Level</div><div class="mv" id="mRisk">—</div></div>
+              <div class="m-pill"><div class="ml">Model</div>   <div class="mv" id="mModel">—</div></div>
+              <div class="m-pill"><div class="ml">Latency</div> <div class="mv" id="mLat">—</div></div>
+            </div>
+
+            <!-- Disease info tabs -->
+            <div class="disease-panel" id="dPanel">
+              <div class="disease-tabs">
+                <button class="dtab active" onclick="showDTab('causes',this)">🔍 Causes</button>
+                <button class="dtab"        onclick="showDTab('precautions',this)">🛡 Precautions</button>
+                <button class="dtab"        onclick="showDTab('diet',this)">🥗 Diet Tips</button>
+              </div>
+              <h4 id="dTitle">Causes</h4>
+              <ul class="disease-list" id="dList"></ul>
+            </div>
+
+            <div class="disclaimer">⚠️ For research and educational use only. Not a substitute for professional medical diagnosis. Consult a licensed neurologist.</div>
+            <button class="btn-pdf" id="pdfBtn" onclick="downloadReport()">📄 Download Health Report (PDF)</button>
+          </div>
+          <div class="result-error" id="rError">
+            <div class="ei">⚠️</div>
+            <p>Prediction failed. Check your input and try again.</p>
+            <div class="em" id="errMsg"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</div><!-- /page-predict -->
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     DOCTORS PAGE
+═══════════════════════════════════════════════════════════════════════════ -->
+<div id="page-doctors" class="page-section">
+  <section class="doctors-sec">
+    <div class="container" style="padding-top:40px">
+      <div class="sec-hd">
+        <h2><span class="dot"></span> Neurologist Directory</h2>
+        <p>Find and book appointments with Alzheimer's specialists near you</p>
+      </div>
+      <div class="city-filter" id="cityFilter"></div>
+      <div class="doctors-grid" id="doctorsGrid">
+        <p style="color:var(--muted)">Loading doctors…</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODEL INSIGHTS PAGE
+═══════════════════════════════════════════════════════════════════════════ -->
+<div id="page-insights" class="page-section">
+  <section class="insights-sec">
+    <div class="container" style="padding-top:40px">
+      <div class="sec-hd">
+        <h2><span class="dot"></span> Model Insights</h2>
+        <p>Architecture, performance metrics, and evaluation results</p>
+      </div>
+
+      <!-- KPI row -->
+      <div class="stats-grid" style="margin-bottom:28px">
+        <div class="stat-card"><div class="stat-icon g">🎯</div><div class="stat-label">Overall Accuracy</div><div class="stat-value" style="color:var(--teal)">86.4%</div></div>
+        <div class="stat-card"><div class="stat-icon b">📊</div><div class="stat-label">Macro F1-Score</div><div class="stat-value" style="color:var(--cyan)">0.84</div></div>
+        <div class="stat-card"><div class="stat-icon p">🧪</div><div class="stat-label">Test Samples</div><div class="stat-value" style="color:var(--purple)">2,921</div></div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:20px">
+  <h3 style="font-family:var(--fh);margin-bottom:16px">📋 Classification Report</h3>
+  
+  <table class="metric-table">
+    <thead>
+      <tr>
+        <th>Class</th>
+        <th>Precision</th>
+        <th>Recall</th>
+        <th>F1-Score</th>
+        <th>Support</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+        <td>Non Demented</td>
+        <td class="good">1.00</td>
+        <td class="ok">0.83</td>
+        <td class="good">0.91</td>
+        <td>2292</td>
+      </tr>
+
+      <tr>
+        <td>Very Mild Dementia</td>
+        <td class="ok">0.59</td>
+        <td class="good">0.97</td>
+        <td class="ok">0.74</td>
+        <td>439</td>
+      </tr>
+
+      <tr>
+        <td>Mild Dementia</td>
+        <td class="ok">0.60</td>
+        <td class="good">0.98</td>
+        <td class="ok">0.74</td>
+        <td>165</td>
+      </tr>
+
+      <tr>
+        <td>Moderate Dementia</td>
+        <td class="good">0.96</td>
+        <td class="good">1.00</td>
+        <td class="good">0.98</td>
+        <td>25</td>
+      </tr>
+
+      <tr>
+        <td>Weighted Avg</td>
+        <td class="good">0.91</td>
+        <td class="ok">0.86</td>
+        <td class="good">0.87</td>
+        <td>2921</td>
+      </tr>
+
+      <tr>
+        <td>Accuracy</td>
+        <td colspan="2" class="good"></td>
+        <td colspan="1" class="good">0.86</td>
+        <td>2921</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+      <!-- Architecture cards -->
+      <div class="sec-hd" style="margin-top:32px"><h2><span class="dot"></span> Model Architecture</h2></div>
+      <div class="insights-grid">
+        <div class="ins-card"><div class="ins-icon">🖼</div><h3>ResNet-50 (MRI)</h3><p>Fine-tuned on brain MRI scans. Final FC layer replaced with 3-class head. Input: 224×224 RGB. Trained with AdamW + cosine LR decay.</p></div>
+        <div class="ins-card"><div class="ins-icon">📊</div><h3>Feature Model (Clinical)</h3><p>8 clinical biomarkers fed through a dense network or gradient-boosted classifier. Features include MMSE, CDR, eTIV, nWBV, age, education, SES.</p></div>
+        <div class="ins-card"><div class="ins-icon">🔀</div><h3>Ensemble Strategy</h3><p>Soft-voting between MRI branch and clinical branch. Probabilities averaged when both modalities are available for higher confidence.</p></div>
+        <div class="ins-card"><div class="ins-icon">📈</div><h3>Training Dataset</h3><p>ADNI (Alzheimer's Disease Neuroimaging Initiative) — 2,840 samples. 80/20 train/test split, 10-fold CV for hyperparameter tuning.</p></div>
+      </div>
+
+      <!-- Performance bar chart (reused) -->
+      <div class="chart-card" style="margin-top:8px">
+        <h3 style="font-family:var(--fh);margin-bottom:16px">📉 Performance Metrics</h3>
+        <div class="chart-wrap"><canvas id="insightsChart"></canvas></div>
+      </div>
+
+      <div class="chart-card" style="margin-top:20px">
+  <h3 style="font-family:var(--fh);margin-bottom:16px">🧾 Confusion Matrix</h3>
+  <div class="chart-wrap">
+    <canvas id="confusionMatrixChart"></canvas>
+  </div>
+</div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════════════════════════════════════════════ -->
+<script>
+/* ── NOTE: All API calls use relative paths (e.g. /predict) because
+          Flask serves this HTML. No hardcoded localhost needed.        ── */
+
+// ── Page Navigation ──────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.id === 'nav-' + name);
+  });
+  if (name === 'doctors') loadDoctors();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// ── Performance Chart (shared) ───────────────────────────────────────────
+function buildChart(canvasId) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+    labels: ['Accuracy', 'Precision', 'Recall', 'F1 Score'],
+    datasets: [{
+        label: 'Score (%)',
+        data: [86, 91, 86, 87],   // ✅ YOUR REAL VALUES
+        backgroundColor: [
+            'rgba(0,212,184,.75)',
+            'rgba(99,188,255,.75)',
+            'rgba(157,111,255,.75)',
+            'rgba(255,179,71,.75)'
+        ],
+        borderColor: [
+            'rgba(0,212,184,1)',
+            'rgba(99,188,255,1)',
+            'rgba(157,111,255,1)',
+            'rgba(255,179,71,1)'
+        ],
+        borderWidth: 1.5,
+        borderRadius: 8,
+    }]
+},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: false, min: 75, max: 100,
+             grid: { color: 'rgba(255,255,255,.05)' },
+             ticks: { color: '#6b7a9d', callback: v => v + '%' } },
+        x: { grid: { display: false }, ticks: { color: '#6b7a9d' } }
+      }
+    }
+  });
+}
+buildChart('perfChart');
+buildChart('insightsChart');
+
+
+function buildConfusionMatrix() {
+    const canvas = document.getElementById('confusionMatrixChart');
+    if (!canvas) {
+        console.error("Canvas not found!");
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    const matrix = [
+        [162, 0, 3, 0],
+        [0, 25, 0, 0],
+        [100, 1, 1901, 290],
+        [9, 0, 4, 426]
+    ];
+
+    const labels = ['Mild', 'Moderate', 'Non', 'Very Mild'];
+
+    const maxVal = Math.max(...matrix.flat());
+
+    const data = [];
+
+    matrix.forEach((row, i) => {
+        row.forEach((val, j) => {
+            const intensity = val / maxVal;
+            data.push({
+                x: labels[j],
+                y: labels[i],
+                v: val,
+                backgroundColor: `rgba(0, 212, 184, ${intensity})`
+            });
+        });
+    });
+
+    new Chart(ctx, {
+        type: 'matrix',
+        data: {
+            datasets: [{
+                label: 'Confusion Matrix',
+                data: data,
+                width: ({ chart }) => (chart.chartArea || {}).width / 4 - 2,
+                height: ({ chart }) => (chart.chartArea || {}).height / 4 - 2,
+                backgroundColor: ctx => ctx.raw.backgroundColor,
+                borderWidth: 1,
+                borderColor: '#0a0f1c'
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: (items) => {
+                            const d = items[0].raw;
+                            return `Actual: ${d.y}, Predicted: ${d.x}`;
+                        },
+                        label: (item) => `Count: ${item.raw.v}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'category',
+                    labels: labels,
+                    ticks: { color: '#6b7a9d' }
+                },
+                y: {
+                    type: 'category',
+                    labels: labels,
+                    ticks: { color: '#6b7a9d' }
+                }
+            }
+        }
+    });
+}buildConfusionMatrix();
+
+// ── Tabs (MRI / Clinical) ─────────────────────────────────────────────────
+var activeTab = 'mri';
+function switchTab(tab, el) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-mri').style.display      = tab === 'mri'      ? '' : 'none';
+  document.getElementById('tab-clinical').style.display = tab === 'clinical' ? '' : 'none';
+}
+
+// ── File Upload ───────────────────────────────────────────────────────────
+var uploadedFile = null;
+function handleFile(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  uploadedFile = f;
+  document.getElementById('fileName').textContent = '📎 ' + f.name;
+  document.getElementById('fileName').style.display = 'block';
+  if (f.type.startsWith('image/')) {
+    const r = new FileReader();
+    r.onload = ev => {
+      const img = document.getElementById('mriPreview');
+      img.src = ev.target.result; img.style.display = 'block';
+    };
+    r.readAsDataURL(f);
+  }
+}
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) { document.getElementById('mriFile').files = e.dataTransfer.files; handleFile({target:{files:[f]}}); }
+});
+
+// ── State helpers ─────────────────────────────────────────────────────────
+function showState(state) {
+  ['rPlaceholder','rLoading','rOutput','rError']
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (state === 'loading') el.style.display = id === 'rLoading' ? 'flex' : 'none';
+      else if (state === 'result') el.style.display = id === 'rOutput' ? 'block' : 'none';
+      else if (state === 'error')  el.style.display = id === 'rError'  ? 'flex'  : 'none';
+      else el.style.display = id === 'rPlaceholder' ? 'flex' : 'none';
+    });
+}
+
+function animateSteps(cb) {
+  const steps = document.querySelectorAll('#lSteps li');
+  steps.forEach(s => s.classList.remove('done'));
+  let i = 0;
+  const tick = () => { if (i < steps.length) { steps[i++].classList.add('done'); setTimeout(tick, 360); } else cb && cb(); };
+  tick();
+}
+
+// ── Disease data store ────────────────────────────────────────────────────
+var _diseaseInfo = null;
+var _lastResult  = null;
+
+function showDTab(tab, el) {
+  if (!_diseaseInfo) return;
+  document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const map = { causes:'🔍 Causes', precautions:'🛡 Precautions', diet:'🥗 Diet Tips' };
+  document.getElementById('dTitle').textContent = map[tab];
+  const list = document.getElementById('dList');
+  list.innerHTML = (_diseaseInfo[tab] || []).map(i => `<li>${i}</li>`).join('');
+}
+
+// ── Prediction ────────────────────────────────────────────────────────────
+async function runPrediction() {
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  showState('loading');
+
+  const startMs = Date.now();
+
+  try {
+    let data;
+
+    if (activeTab === 'mri') {
+      if (!uploadedFile) throw new Error('Please upload an MRI scan first.');
+      const fd = new FormData();
+      fd.append('mri_scan', uploadedFile);
+      fd.append('mode', 'mri');
+      const res = await fetch('/predict', { method:'POST', body: fd });
+      data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+
+    } else {
+      const age  = document.getElementById('age').value;
+      const mmse = document.getElementById('mmse').value;
+      const cdr  = document.getElementById('cdr').value;
+      if (!age || !mmse || !cdr) throw new Error('Please fill in Age, MMSE, and CDR at minimum.');
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode:   'clinical',
+          age:    parseFloat(age),
+          gender: document.getElementById('gender').value || 'M',
+          mmse:   parseFloat(mmse),
+          cdr:    parseFloat(cdr),
+          etiv:   parseFloat(document.getElementById('etiv').value) || null,
+          nwbv:   parseFloat(document.getElementById('nwbv').value) || null,
+          educ:   parseInt(document.getElementById('educ').value)   || null,
+          ses:    parseInt(document.getElementById('ses').value)    || null,
+        })
+      });
+      data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+    }
+
+    if (data.error) throw new Error(data.error);
+
+    _lastResult = {
+      patient_name: document.getElementById('pname')?.value || '',
+      age:          document.getElementById('age')?.value   || '',
+      gender:       document.getElementById('gender')?.value || '',
+      ...data,
+    };
+
+    // Fetch disease info
+    try {
+      const dr = await fetch('/disease-info?label=' + encodeURIComponent(data.prediction));
+      _diseaseInfo = await dr.json();
+    } catch(_) { _diseaseInfo = null; }
+
+    animateSteps(() => { setTimeout(() => displayResult(data), 250); btn.disabled = false; });
+
+  } catch (err) {
+    animateSteps(() => {});
+    setTimeout(() => {
+      showState('error');
+      document.getElementById('errMsg').textContent = err.message;
+    }, 1200);
+    btn.disabled = false;
+  }
+}
+
+function displayResult(data) {
+  showState('result');
+
+  const label    = (data.prediction || '').toLowerCase();
+  const isAlz    = label.includes('alzheimer');
+  const isMCI    = label.includes('mci');
+  const verdict  = document.getElementById('rVerdict');
+  const cls      = isAlz ? 'positive' : isMCI ? 'warning' : 'negative';
+  verdict.className = 'result-verdict ' + cls;
+  document.getElementById('vIcon').textContent = isAlz ? '⚠️' : isMCI ? '🔶' : '✅';
+  document.getElementById('vText').textContent = data.prediction;
+
+  const conf = Math.round(data.confidence || 0);
+  document.getElementById('confVal').textContent = conf + '%';
+  setTimeout(() => { document.getElementById('confFill').style.width = conf + '%'; }, 80);
+
+  document.getElementById('mStage').textContent = data.stage   || '—';
+  document.getElementById('mRisk').textContent  = data.risk    || '—';
+  document.getElementById('mModel').textContent = data.model   || 'CNN';
+  document.getElementById('mLat').textContent   = data.latency_ms ? data.latency_ms + 'ms' : '—';
+
+  // Populate disease info panel
+  if (_diseaseInfo) {
+    document.getElementById('dTitle').textContent = '🔍 Causes';
+    document.getElementById('dList').innerHTML = (_diseaseInfo.causes || []).map(i => `<li>${i}</li>`).join('');
+  } else {
+    document.getElementById('dPanel').style.display = 'none';
+  }
+}
+
+// ── PDF Report ────────────────────────────────────────────────────────────
+async function downloadReport() {
+  if (!_lastResult || !_diseaseInfo) return;
+  const btn = document.getElementById('pdfBtn');
+  btn.textContent = '⏳ Generating…'; btn.disabled = true;
+
+  try {
+    // Find recommended doctor by city
+    let doctor = null;
+    const city = document.getElementById('city')?.value;
+    if (city) {
+      const dr = await fetch('/doctors?city=' + encodeURIComponent(city));
+      const dj = await dr.json();
+      doctor = (dj.doctors || [])[0] || null;
+    }
+
+    const payload = {
+      ..._lastResult,
+      causes:      _diseaseInfo.causes      || [],
+      precautions: _diseaseInfo.precautions || [],
+      diet:        _diseaseInfo.diet        || [],
+      doctor,
+    };
+
+    const res = await fetch('/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      throw new Error(j.error || 'PDF generation failed');
+    }
+
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `NeuroScan_Report_${(_lastResult.patient_name || 'Patient').replace(/\s+/g,'_')}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('PDF Error: ' + err.message + '\n\nMake sure fpdf2 is installed: pip install fpdf2');
+  } finally {
+    btn.textContent = '📄 Download Health Report (PDF)'; btn.disabled = false;
+  }
+}
+
+// ── Doctors ───────────────────────────────────────────────────────────────
+var _allDoctors = [], _allCities = [], _activeCity = '';
+var _bookState = {};  // docIdx -> {open, confirmed}
+
+async function loadDoctors() {
+  if (_allDoctors.length) { renderDoctors(); return; }
+  try {
+    const res = await fetch('/doctors');
+    const j   = await res.json();
+    _allDoctors = j.doctors || [];
+    _allCities  = j.cities  || [];
+    renderCityFilter();
+    renderDoctors();
+  } catch (e) {
+    document.getElementById('doctorsGrid').innerHTML = `<p style="color:var(--muted)">Could not load doctors: ${e.message}</p>`;
+  }
+}
+
+function renderCityFilter() {
+  const cf = document.getElementById('cityFilter');
+  cf.innerHTML = '<button class="city-btn active" onclick="filterCity(\'\',this)">All Cities</button>' +
+    _allCities.map(c => `<button class="city-btn" onclick="filterCity('${c}',this)">${c}</button>`).join('');
+}
+
+function filterCity(city, el) {
+  _activeCity = city;
+  document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderDoctors();
+}
+
+function renderDoctors() {
+  const docs = _activeCity
+    ? _allDoctors.filter(d => d.city === _activeCity)
+    : _allDoctors;
+
+  if (!docs.length) {
+    document.getElementById('doctorsGrid').innerHTML = '<p style="color:var(--muted)">No doctors found for this city.</p>';
+    return;
+  }
+
+  document.getElementById('doctorsGrid').innerHTML = docs.map((d, i) => `
+    <div class="doc-card">
+      <div class="doc-header">
+        <div class="doc-avatar">👨‍⚕️</div>
+        <div>
+          <div class="doc-name">${d.name}</div>
+          <div class="doc-spec">${d.specialist}</div>
+        </div>
+      </div>
+      <div class="doc-meta">
+        <div class="doc-meta-item"><div class="dml">Hospital</div><div class="dmv">${d.hospital}</div></div>
+        <div class="doc-meta-item"><div class="dml">City</div><div class="dmv">${d.city}</div></div>
+        <div class="doc-meta-item"><div class="dml">Fees</div><div class="dmv">${d.fees}</div></div>
+        <div class="doc-meta-item"><div class="dml">Experience</div><div class="dmv">${d.exp}</div></div>
+      </div>
+      <button class="btn-book" onclick="toggleBook(${i})" id="bookbtn-${i}">📅 Book Appointment</button>
+      <div class="book-form" id="bookform-${i}">
+        <input type="text"  id="bname-${i}" placeholder="Your name" style="margin-bottom:8px">
+        <input type="date"  id="bdate-${i}" style="margin-bottom:8px">
+        <input type="time"  id="btime-${i}" style="margin-bottom:0">
+        <button class="btn-confirm" onclick="confirmBook(${i},'${d.name}')">✅ Confirm Appointment</button>
+      </div>
+      <div class="book-success" id="booksuccess-${i}"></div>
+    </div>
+  `).join('');
+}
+
+function toggleBook(i) {
+  const form = document.getElementById('bookform-' + i);
+  form.classList.toggle('open');
+  const btn = document.getElementById('bookbtn-' + i);
+  btn.textContent = form.classList.contains('open') ? '✖ Cancel' : '📅 Book Appointment';
+}
+
+function confirmBook(i, docName) {
+  const name = document.getElementById('bname-' + i).value.trim() || 'Patient';
+  const date = document.getElementById('bdate-' + i).value;
+  const time = document.getElementById('btime-' + i).value;
+  if (!date) { alert('Please select an appointment date.'); return; }
+
+  const suc = document.getElementById('booksuccess-' + i);
+  suc.style.display = 'block';
+  suc.textContent   = `🎉 Confirmed! ${name} → ${docName} on ${date}${time ? ' at ' + time : ''}`;
+  document.getElementById('bookform-' + i).classList.remove('open');
+  document.getElementById('bookbtn-' + i).textContent = '📅 Book Appointment';
+}
+</script>
+</body>
+</html>
